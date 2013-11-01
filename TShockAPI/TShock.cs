@@ -49,7 +49,9 @@ namespace TShockAPI
 		private const string LogFormatDefault = "yyyy-MM-dd_HH-mm-ss";
 		private static string LogFormat = LogFormatDefault;
 		private const string LogPathDefault = "tshock";
+        private const string CLogPathDefault = "tshock";
 		private static string LogPath = LogPathDefault;
+        private static string CLogPath = LogPathDefault;
 		private static bool LogClear = false;
 
 		public static TSPlayer[] Players = new TSPlayer[Main.maxPlayers];
@@ -151,12 +153,32 @@ namespace TShockAPI
 					// Problem with the log path or format use the default
 					logFilename = Path.Combine(LogPathDefault, now.ToString(LogFormatDefault) + ".log");
 				}
+                string ClogFilename;
+                string ClogPathSetupWarning = null;
+                if (CLogPath == LogPathDefault)
+                    CLogPath = "Commands";
+                try
+                {
+                    ClogFilename = Path.Combine(CLogPath, now.ToString(LogFormat) + "C.log");
+                    if (!Directory.Exists(CLogPath))
+                        Directory.CreateDirectory(CLogPath);
+                }
+                catch (Exception ex)
+                {
+                    ClogPathSetupWarning = "Could not apply the given log path / log format, defaults will be used. Exception details:\n" + ex;
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ClogPathSetupWarning);
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    // Problem with the log path or format use the default
+                    ClogFilename = Path.Combine(LogPathDefault, now.ToString(LogFormatDefault) + ".log");
+                }
 #if DEBUG
 				Log.Initialize(logFilename, LogLevel.All, false);
 #else
 				Log.Initialize(logFilename, LogLevel.All & ~LogLevel.Debug, LogClear);
+                LogCommand.Initialize(ClogFilename, LogLevel.All & ~LogLevel.Debug, LogClear);
 #endif
-				if (logPathSetupWarning != null)
+                if (logPathSetupWarning != null)
 					Log.Warn(logPathSetupWarning);
 
 				AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;

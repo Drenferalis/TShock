@@ -1317,7 +1317,7 @@ namespace TShockAPI
 			if (args.Player.FirstMaxHP == 0)
 				args.Player.FirstMaxHP = max;
 
-			if (cur < 0 || cur > 500 || max < 100 || max > 500) //Abnormal values have the potential to cause infinite loops in the server.
+			if (cur < 0 || cur > 1000 || max < 100 || max > 1000) //Abnormal values have the potential to cause infinite loops in the server.
 			{
 				TShock.Utils.ForceKick(args.Player, "Crash Exploit Attempt", true);
 				return false;
@@ -2526,8 +2526,10 @@ namespace TShockAPI
 			}
 
 			args.Player.LastDeath = DateTime.Now;
+            args.Player.Level = 1;
+            int exp = args.Player.Experience / 2;
+            args.Player.Experience = exp;
 			args.Player.Dead = true;
-
 			if (args.TPlayer.difficulty == 2 && TShock.Config.ServerSideCharacter && args.Player.IsLoggedIn)
 			{
 				User user = TShock.Users.GetUserByName(args.Player.UserAccountName);
@@ -3060,6 +3062,139 @@ namespace TShockAPI
 			return false;
 		}
 
+
+        static volatile Dictionary<Terraria.NPC, List<MPlayerDamage>> DamageDictionary = new Dictionary<Terraria.NPC, List<MPlayerDamage>>();
+
+        /// <summary>
+        /// Format for this dictionary:
+        /// * key: Player ID
+        /// * value: Last player hit ID
+        /// </summary>
+
+
+        /// <summary>
+        /// synch object for access to the dictionary.  You MUST obtain a mutex through this object to access the volatile dictionary member.
+        /// </summary>
+        static readonly object __dictionaryLock = new object();
+
+        public class MPlayerDamage
+        {
+            public Terraria.Player Player;
+            public int Damage;
+        }
+
+        static void AddNPCDamage(Terraria.NPC NPC, Terraria.Player Player, int Damage)
+        {
+            //TSServerPlayer.Server.SendInfoMessage("AddNPCDamage "+NPC.name);
+            lock (__dictionaryLock)
+            {
+                List<MPlayerDamage> damageList;
+                MPlayerDamage playerDamage;
+
+                if (DamageDictionary.ContainsKey(NPC))
+                {
+                    damageList = DamageDictionary[NPC];
+                }
+                else
+                {
+                    damageList = new List<MPlayerDamage>(1);
+                    DamageDictionary.Add(NPC, damageList);
+                }
+
+                playerDamage = damageList.FirstOrDefault(i => i.Player == Player);
+
+                if (playerDamage == null)
+                {
+                    playerDamage = new MPlayerDamage() { Player = Player };
+                    damageList.Add(playerDamage);
+                }
+
+                //increment the damage into either the new or existing slot damage in the dictionary
+                //If the damage is greater than the NPC's health then it was a one-shot kill and the damage should be capped.
+                playerDamage.Damage += NPC != null && Damage > NPC.lifeMax ? NPC.lifeMax : Damage;
+            }
+        }
+        static void CheckLevelUp(int id)
+        {
+            try
+            {
+                uint exptolevelup;
+                int lvl = TShock.Players[id].Level;
+                int exp = TShock.Players[id].Experience;
+                exptolevelup = (uint)((Math.Pow(lvl, 4) - (Math.Pow(lvl + 1, 2)) + 100));
+                if (exptolevelup <= exp && lvl < 90)
+                {
+                    TShock.Players[id].Level += 1;
+
+                    TShock.Players[id].SendInfoMessage(string.Format("You leveled up to level {0}", TShock.Players[id].Level.ToString()));
+                    Main.player[id].statLifeMax = (lvl * 10) + 110;
+
+                    NetMessage.SendData(16, id, -1, "", id, 0f, 0f, 0f, 0);
+                    TShock.Players[id].SaveServerCharacter();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.ConsoleError(ex.ToString());
+            }
+        }
+        static void GiveRewardsForNPC(Terraria.NPC NPC)
+        {
+            //TSServerPlayer.Server.SendInfoMessage("Gave Rewards for "+NPC.name);
+            lock (__dictionaryLock)
+            {
+
+                if (DamageDictionary.ContainsKey(NPC))
+                {
+                    List<MPlayerDamage> playerDamageList = DamageDictionary[NPC];
+
+
+                    foreach (MPlayerDamage damage in playerDamageList)
+                    {
+                        if (damage.Player == null)
+                        {
+                            continue;
+                        }
+
+
+
+                        //load override by NPC type, this allows you to put a modifier on the base for a specific mob type.
+
+
+                        int dmg = damage.Damage;
+
+
+                        //if the user doesn't have a bank account or the reward for the mob is 0 (It could be) skip it
+
+
+
+                        if ((NPC.boss))
+                        {
+                            TSPlayer.All.SendInfoMessage(string.Format("{0} gained {1}exp for killing {2}", TShock.Players[damage.Player.whoAmi].Name, dmg, NPC.name));
+                            //Player gained x experience on boss kill, broadcast
+
+                        }
+                        else
+                        {
+
+                        }
+
+                        //give exp
+                        TShock.Players[damage.Player.whoAmi].expsince += dmg;
+                        TShock.Players[damage.Player.whoAmi].Experience += dmg;
+                        CheckLevelUp(damage.Player.whoAmi);
+
+                    }
+                    DamageDictionary.Remove(NPC);
+                }
+            }
+        }
+        public static bool IsOdd(int value)
+        {
+            return value % 2 != 0;
+        }
+
+
 		private static bool HandleNpcStrike(GetDataHandlerArgs args)
 		{
 			var id = args.Data.ReadInt8();
@@ -3067,6 +3202,29 @@ namespace TShockAPI
 			var dmg = args.Data.ReadInt16();
 			var pvp = args.Data.ReadInt8();
 			var crit = args.Data.ReadInt8();
+            int lvl = TShock.Players[args.Player.Index].Level;
+            AddNPCDamage(Terraria.Main.npc[id], args.Player.Index >= 0 ? Terraria.Main.player[args.Player.Index] : null, dmg);
+            Terraria.NPC npc = Terraria.Main.npc[id];
+            //TSServerPlayer.Server.SendInfoMessage("Defined for rewards: " + npc.name);
+            if (npc != null && npc.realLife <= 0)
+            {
+                //TSServerPlayer.Server.SendInfoMessage("Giving rewards: " + npc.name);
+                if (npc.boss && !npc.active)
+                {
+                    lock (__dictionaryLock)
+                    {
+                        GiveRewardsForNPC(npc);
+                    }
+                }
+                else if (!npc.boss)
+                {
+                    lock (__dictionaryLock)
+                    {
+                        GiveRewardsForNPC(npc);
+                    }
+                }
+            }
+
 
 			if (OnNPCStrike(id, direction, dmg, pvp, crit))
 				return true;

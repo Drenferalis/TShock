@@ -38,7 +38,9 @@ namespace TShockAPI.DB
 			                         new SqlColumn("MaxMana", MySqlDbType.Int32),
 			                         new SqlColumn("Inventory", MySqlDbType.Text),
 									 new SqlColumn("spawnX", MySqlDbType.Int32),
-									 new SqlColumn("spawnY", MySqlDbType.Int32)
+									 new SqlColumn("spawnY", MySqlDbType.Int32),
+                                     new SqlColumn("Level", MySqlDbType.Int32),
+                                     new SqlColumn("Experience", MySqlDbType.Int32)
 				);
 			var creator = new SqlTableCreator(db,
 			                                  db.GetSqlType() == SqlType.Sqlite
@@ -65,6 +67,8 @@ namespace TShockAPI.DB
 						playerData.inventory = NetItem.Parse(reader.Get<string>("Inventory"));
 						playerData.spawnX = reader.Get<int>("spawnX");
 						playerData.spawnY = reader.Get<int>("spawnY");
+                        playerData.lvl = reader.Get<int>("Level");
+                        playerData.exp = reader.Get<int>("Experience");
 						return playerData;
 					}
 				}
@@ -79,11 +83,11 @@ namespace TShockAPI.DB
 
 		public bool SeedInitialData(User user)
 		{
-			string initialItems = "-15,1,0~-13,1,0~-16,1,45~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0";
+            string initialItems = "798,1,0~1240,1,0~795,1,0~792,1,0~794,1,0~793,1,0~9,999,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0";
 			try
 			{
-				database.Query("INSERT INTO tsCharacter (Account, Health, MaxHealth, Mana, MaxMana, Inventory, spawnX, spawnY) VALUES (@0, @1, @2, @3, @4, @5, @6, @7);", user.ID,
-							   100, 100, 20, 20, initialItems, -1, -1);
+                database.Query("INSERT INTO tsCharacter (Account, Health, MaxHealth, Mana, MaxMana, Inventory, spawnX, spawnY, Level, Experience) VALUES (@0, @1, @2, @3, @4, @5, @6, @7, @8, @9);", user.ID,
+                               100, 100, 20, 20, initialItems, -1, -1, 1, 0);
 				return true;
 			}
 			catch (Exception ex)
@@ -106,8 +110,8 @@ namespace TShockAPI.DB
 			{
 				try
 				{
-					database.Query("INSERT INTO tsCharacter (Account, Health, MaxHealth, Mana, MaxMana, Inventory, spawnX, spawnY) VALUES (@0, @1, @2, @3, @4, @5, @6, @7);", player.UserID,
-								   playerData.health, playerData.maxHealth, playerData.mana, playerData.maxMana, NetItem.ToString(playerData.inventory), player.TPlayer.SpawnX, player.TPlayer.SpawnY);
+                    database.Query("INSERT INTO tsCharacter (Account, Health, MaxHealth, Mana, MaxMana, Inventory, spawnX, spawnY, Level, Experience) VALUES (@0, @1, @2, @3, @4, @5, @6, @7, @9, @8);", player.UserID,
+                                                       playerData.health, playerData.maxHealth, playerData.mana, playerData.maxMana, NetItem.ToString(playerData.inventory), player.TPlayer.SpawnX, player.TPlayer.SpawnY, player.Experience, player.Level);
 					return true;
 				}
 				catch (Exception ex)
@@ -119,8 +123,8 @@ namespace TShockAPI.DB
 			{
 				try
 				{
-					database.Query("UPDATE tsCharacter SET Health = @0, MaxHealth = @1, Mana = @2, MaxMana = @3, Inventory = @4, spawnX = @6, spawnY = @7 WHERE Account = @5;", playerData.health, playerData.maxHealth,
-								   playerData.mana, playerData.maxMana, NetItem.ToString(playerData.inventory), player.UserID, player.TPlayer.SpawnX, player.TPlayer.SpawnY);
+                    database.Query("UPDATE tsCharacter SET Health = @0, MaxHealth = @1, Mana = @2, MaxMana = @3, Inventory = @4, spawnX = @6, spawnY = @7, Level = @8, Experience = @9 WHERE Account = @5;", playerData.health, playerData.maxHealth,
+                                   playerData.mana, playerData.maxMana, NetItem.ToString(playerData.inventory), player.UserID, player.TPlayer.SpawnX, player.TPlayer.SpawnY, player.Level, player.Experience);
 					return true;
 				}
 				catch (Exception ex)

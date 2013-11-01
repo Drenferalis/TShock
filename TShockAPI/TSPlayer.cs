@@ -212,6 +212,10 @@ namespace TShockAPI
 
 		public bool TpLock;
 
+        public int Level = 1;
+        public int expsince = 0;
+        public int Experience = 1;
+
 		private Player FakePlayer;
 
 		public bool RequestedSection;
@@ -599,7 +603,7 @@ namespace TShockAPI
 			return true;
 		}
 
-		public void Heal(int health = 500)
+		public void Heal(int health = 1000)
 		{
 			NetMessage.SendData((int)PacketTypes.PlayerHealOther, -1, -1, "", this.TPlayer.whoAmi, health);
 		}
@@ -1079,7 +1083,8 @@ namespace TShockAPI
 		public bool exists;
 		public int spawnX= -1;
 		public int spawnY= -1;
-		
+        public int exp = 1;
+        public int lvl = 1;
 
 		public PlayerData(TSPlayer player)
 		{
@@ -1223,7 +1228,7 @@ namespace TShockAPI
 			player.TPlayer.SpawnX = this.spawnX;
 			player.TPlayer.SpawnY = this.spawnY;
 			player.sX = this.spawnX;
-			player.sY = this.spawnY;
+			player.sY = this.spawnY;            
 			
 			for (int i = 0; i < NetItem.maxNetInventory; i++)
 			{

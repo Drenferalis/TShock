@@ -511,6 +511,22 @@ namespace TShockAPI
 			});
 			#endregion
 
+            add(new Command(Permissions.item, Reason, "reason")
+            {
+                HelpText = "Give a reason for your last command"
+            });
+            add(new Command(Level, "level")
+            {
+                HelpText = "Shows your level and experience."
+            });
+            add(new Command(expsince, "exp")
+            {
+                HelpText = "Shows your experience gained since last login or /exp."
+            });
+            add(new Command(HelpOP, "helpop")
+            {
+                HelpText = "Sends a message to staff."
+            });
 			add(new Command(Aliases, "aliases")
 			{
 				HelpText = "Shows a command's aliases."
@@ -3955,6 +3971,49 @@ namespace TShockAPI
 
 		#region Cheat Commands
 
+        private static void Level(CommandArgs args)
+        {
+            int lvl = args.Player.Level;
+            uint exptolevelup = (uint)((Math.Pow(lvl, 4) - (Math.Pow(lvl + 1, 2)) + 100));
+            if (lvl == 90) { exptolevelup = 0; }
+            args.Player.SendSuccessMessage(String.Format("Level: {0} Exp: {1}/{2}", args.Player.Level, args.Player.Experience, exptolevelup));
+
+        }
+        private static void expsince(CommandArgs args)
+        {
+
+            args.Player.SendSuccessMessage(String.Format("You have gained {0}exp since this command was last run or your last login.", args.Player.expsince));
+            args.Player.expsince = 0;
+
+        }
+        private static void Reason(CommandArgs args)
+        {
+            args.Player.SendSuccessMessage("Reason Added");
+            return;
+        }
+        private static void HelpOP(CommandArgs args)
+        {
+
+            if (args.Parameters.Count < 1)
+            {
+                args.Player.SendErrorMessage("Invalid syntax! Proper usage is: /helpop <message>");
+                return;
+            }
+            string msg = String.Join(" ", args.Parameters.GetRange(0, args.Parameters.Count));
+            foreach (TSPlayer plyr in TShock.Players)
+            {
+                if (plyr == null)
+                {
+                    break;
+                }
+                if (plyr.Group.Name.ToString() == "Moderator" || plyr.Group.Name.ToString() == "trustedadmin" || plyr.Group.Name.ToString() == "superadmin")
+                {
+                    plyr.SendInfoMessage(string.Format("{1} says: {0}", msg, args.Player.Name));
+                }
+            }
+            TSPlayer.Server.SendInfoMessage(string.Format("{1} says: {0}", msg, args.Player.Name));
+            args.Player.SendSuccessMessage("Message sent to staff!");
+        }
 		private static void Clear(CommandArgs args)
 		{
 			if (args.Parameters.Count != 1 && args.Parameters.Count != 2)
