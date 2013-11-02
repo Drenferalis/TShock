@@ -515,6 +515,10 @@ namespace TShockAPI
             {
                 HelpText = "Give a reason for your last command"
             });
+            add(new Command(Permissions.item, pvp, "pvp")
+            {
+                HelpText = "Toggle PVP"
+            });
             add(new Command(Level, "level")
             {
                 HelpText = "Shows your level and experience."
@@ -779,7 +783,6 @@ namespace TShockAPI
 						TShock.CharacterDB.InsertPlayerData(args.Player);
 					}
 					args.Player.SendSuccessMessage("Authenticated as " + user.Name + " successfully.");
-
 					Log.ConsoleInfo(args.Player.Name + " authenticated successfully as user: " + user.Name + ".");
                     args.Player.SetTeam();
 					if ((args.Player.LoginHarassed) && (TShock.Config.RememberLeavePos))
@@ -792,7 +795,7 @@ namespace TShockAPI
 						args.Player.LoginHarassed = false;
 					}
 					TShock.Users.SetUserUUID(user, args.Player.UUID);
-
+                    spawn(args.Player);
 					Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
 				}
 				else
@@ -815,6 +818,17 @@ namespace TShockAPI
 				Log.Error(ex.ToString());
 			}
 		}
+        public static void spawn(TSPlayer plyr)
+        {
+            if (plyr.pteam == 1)
+            {
+                plyr.Teleport(75000, 5100);
+            }
+            if (plyr.pteam == 2)
+            {
+                plyr.Teleport(25000, 5100);
+            }
+        }
         private static void testrand(CommandArgs args)
         {
             Random r = new Random();
@@ -3998,6 +4012,24 @@ namespace TShockAPI
         {
             args.Player.SendSuccessMessage("Reason Added");
             return;
+        }
+        private static void pvp(CommandArgs args)
+        {
+            if (TShock.Config.PvPMode == "normal")
+            {
+                TShock.Config.PvPMode = "always";
+                TShock.Regions.SetRegionState("1", false);
+                TShock.Regions.SetRegionState("2", false);
+                TSPlayer.All.SendInfoMessage("PVP TIME!");
+            }
+            else
+            {
+                TShock.Config.PvPMode = "normal";
+                TShock.Regions.SetRegionState("1", true);
+                TShock.Regions.SetRegionState("2", true);
+                TSPlayer.All.SendInfoMessage("PVP TIME IS OVER!");
+            }
+            TSPlayer.All.SendInfoMessage("PVP WAS MODIFIED BY STAFF!");
         }
         private static void HelpOP(CommandArgs args)
         {

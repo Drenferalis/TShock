@@ -72,11 +72,6 @@ namespace TShockAPI.DB
                         playerData.lvl = reader.Get<int>("Level");
                         playerData.exp = reader.Get<int>("Experience");
                         playerData.pteam = reader.Get<int>("pteam");
-                        if (playerData.pteam == 0)
-                        {
-                            playerData.pteam = rr;
-                            Log.ConsoleInfo("Random was (READ)"+ rr);
-                        }
 						return playerData;
 					}
 				}
@@ -92,7 +87,7 @@ namespace TShockAPI.DB
 		public bool SeedInitialData(User user)
 		{
             Random r = new Random();
-            int rr = r.Next(1,2);
+            int rr = r.Next(1,3);
             Log.ConsoleInfo("Random was (SEED)" + rr);
             string initialItems = "798,1,0~1240,1,0~795,1,0~792,1,0~794,1,0~793,1,0~9,999,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0~0,0,0";
 			try
@@ -112,13 +107,20 @@ namespace TShockAPI.DB
 		public bool InsertPlayerData(TSPlayer player)
 		{
 			PlayerData playerData = player.PlayerData;
-			
+            Random r = new Random();
+            int rr = r.Next(1, 3);
+            if (playerData.pteam == 0)
+            {
+                Log.ConsoleInfo("Insert new pteam for " + player.UserAccountName);
+                playerData.pteam = rr;
+            }
 			if (!player.IsLoggedIn)
 				return false;
 			
 			
 			if (!GetPlayerData(player, player.UserID).exists)
 			{
+
 				try
 				{
                     database.Query("INSERT INTO tsCharacter (Account, Health, MaxHealth, Mana, MaxMana, Inventory, spawnX, spawnY, Level, Experience, pteam) VALUES (@0, @1, @2, @3, @4, @5, @6, @7, @9, @8, @10);", player.UserID,

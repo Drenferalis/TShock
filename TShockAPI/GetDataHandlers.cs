@@ -1454,6 +1454,7 @@ namespace TShockAPI
 					args.Player.SendMessage("Authenticated as " + args.Player.Name + " successfully.", Color.LimeGreen);
 					Log.ConsoleInfo(args.Player.Name + " authenticated successfully as user " + args.Player.Name + ".");
                     args.Player.SetTeam();
+                    TShockAPI.Commands.spawn(args.Player);
 					Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
 					return true;
 				}

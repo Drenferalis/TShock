@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Timers;
 using MaxMind;
 using Mono.Data.Sqlite;
 using MySql.Data.MySqlClient;
@@ -53,7 +54,7 @@ namespace TShockAPI
 		private static string LogPath = LogPathDefault;
         private static string CLogPath = LogPathDefault;
 		private static bool LogClear = false;
-
+        private Timer timer;
 		public static TSPlayer[] Players = new TSPlayer[Main.maxPlayers];
 		public static BanManager Bans;
 		public static WarpManager Warps;
@@ -248,7 +249,7 @@ namespace TShockAPI
 				RestApi.Port = Config.RestApiPort;
 				RestManager = new RestManager(RestApi);
 				RestManager.RegisterRestfulCommands();
-
+                
 				var geoippath = Path.Combine(SavePath, "GeoIP.dat");
 				if (Config.EnableGeoIP && File.Exists(geoippath))
 					Geo = new GeoIPCountry(geoippath);
@@ -615,13 +616,29 @@ namespace TShockAPI
 			}
 
             Regions.ReloadAllRegions();
-
+            timer = new Timer(60 * 24 * 60 * 1000);
+            timer.Elapsed += OnElapsed;
+            timer.Start();
 			Lighting.lightMode = 2;
 			FixChestStacks();
 
             
 		}
-
+        private void OnElapsed(object sender, ElapsedEventArgs e)
+        {
+            if(TShock.Config.PvPMode == "normal")
+            {
+                TShock.Config.PvPMode = "always";
+                TShock.Regions.SetRegionState("1", false);
+                TShock.Regions.SetRegionState("2", false);
+                TSPlayer.All.SendInfoMessage("PVP TIME!");
+            }else{
+                TShock.Config.PvPMode = "normal";
+                TShock.Regions.SetRegionState("1", true);
+                TShock.Regions.SetRegionState("2", true);
+                TSPlayer.All.SendInfoMessage("PVP TIME IS OVER!");
+            }
+        }
 		private void FixChestStacks()
 		{
             if (Config.IgnoreChestStacksOnLoad)
@@ -1529,7 +1546,7 @@ namespace TShockAPI
 			{
 				if (((DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - player.RPm) > 2000)
 				{
-					player.SendMessage("This region is protected from changes.", Color.Red);
+					player.SendMessage("This is not your land (Try the other side of the map).", Color.Red);
 					player.RPm = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 				}
 				return true;
@@ -1584,7 +1601,7 @@ namespace TShockAPI
 			{
 				if (((DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - player.RPm) > 2000)
 				{
-					player.SendMessage("This region is protected from changes.", Color.Red);
+					player.SendMessage("This is not your land (Try the other side of the map).", Color.Red);
 					player.RPm = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 				}
 				return true;

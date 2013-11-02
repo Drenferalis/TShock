@@ -797,33 +797,33 @@ namespace TShockAPI
 
 		public virtual void SetTeam(int team)
 		{
-            if (pteam == 0 || pteam == null)
+            if (this.pteam == 0)
             {
                 Random r = new Random();
                 int rr = r.Next(1, 3);
                 this.pteam = rr;
                 Log.ConsoleInfo("Random was (SET var)" + rr);
+                TShock.Regions.AddNewUser(this.pteam.ToString(), this.Name.ToString());
                 Main.player[Index].team = this.pteam;
             }
+            TShock.Regions.AddNewUser(this.pteam.ToString(), this.Name.ToString());
 			Main.player[Index].team = this.pteam;
 			SendData(PacketTypes.PlayerTeam, "", Index);
 		}
         public int pteam;
         public virtual void SetTeam()
         {
-
-            if (pteam == 0 || pteam == null)
+            if (this.pteam == 0)
             {
                 Random r = new Random();
                 int rr = r.Next(1, 3);
                 this.pteam = rr;
                 Log.ConsoleInfo("Random was (SET no var)" + rr);
+                TShock.Regions.AddNewUser(this.pteam.ToString(), this.Name.ToString());
                 Main.player[Index].team = this.pteam;
             }
-            else
-            {
-                Main.player[Index].team = this.pteam;
-            }
+            Main.player[Index].team = this.pteam;
+            TShock.Regions.AddNewUser(this.pteam.ToString(), this.Name.ToString());
             SendData(PacketTypes.PlayerTeam, "", Index);
         }
 
