@@ -527,6 +527,10 @@ namespace TShockAPI
             {
                 HelpText = "Sends a message to staff."
             });
+            add(new Command(testrand, "tr")
+            {
+                HelpText = "Sends a message to staff."
+            });
 			add(new Command(Aliases, "aliases")
 			{
 				HelpText = "Shows a command's aliases."
@@ -777,6 +781,7 @@ namespace TShockAPI
 					args.Player.SendSuccessMessage("Authenticated as " + user.Name + " successfully.");
 
 					Log.ConsoleInfo(args.Player.Name + " authenticated successfully as user: " + user.Name + ".");
+                    args.Player.SetTeam();
 					if ((args.Player.LoginHarassed) && (TShock.Config.RememberLeavePos))
 					{
 						if (TShock.RememberedPos.GetLeavePos(args.Player.Name, args.Player.IP) != Vector2.Zero)
@@ -785,7 +790,6 @@ namespace TShockAPI
 							args.Player.Teleport((int) pos.X*16, (int) pos.Y*16);
 						}
 						args.Player.LoginHarassed = false;
-
 					}
 					TShock.Users.SetUserUUID(user, args.Player.UUID);
 
@@ -811,7 +815,11 @@ namespace TShockAPI
 				Log.Error(ex.ToString());
 			}
 		}
-
+        private static void testrand(CommandArgs args)
+        {
+            Random r = new Random();
+            args.Player.SendInfoMessage(r.Next(1, 3).ToString());
+        }
 		private static void PasswordUser(CommandArgs args)
 		{
 			try
@@ -873,7 +881,7 @@ namespace TShockAPI
                 if (TShock.Users.GetUserByName(user.Name) == null && user.Name != TSServerPlayer.AccountName) // Cheap way of checking for existance of a user
 				{
 					args.Player.SendSuccessMessage("Account \"{0}\" has been registered.", user.Name);
-					args.Player.SendSuccessMessage("Your password is {0}.", user.Password);
+					//args.Player.SendSuccessMessage("Your password is {0}.", user.Password);
 					TShock.Users.AddUser(user);
 					TShock.CharacterDB.SeedInitialData(TShock.Users.GetUser(user));
 					Log.ConsoleInfo("{0} registered an account: \"{1}\".", args.Player.Name, user.Name);

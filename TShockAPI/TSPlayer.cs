@@ -797,9 +797,35 @@ namespace TShockAPI
 
 		public virtual void SetTeam(int team)
 		{
-			Main.player[Index].team = team;
+            if (pteam == 0 || pteam == null)
+            {
+                Random r = new Random();
+                int rr = r.Next(1, 3);
+                this.pteam = rr;
+                Log.ConsoleInfo("Random was (SET var)" + rr);
+                Main.player[Index].team = this.pteam;
+            }
+			Main.player[Index].team = this.pteam;
 			SendData(PacketTypes.PlayerTeam, "", Index);
 		}
+        public int pteam;
+        public virtual void SetTeam()
+        {
+
+            if (pteam == 0 || pteam == null)
+            {
+                Random r = new Random();
+                int rr = r.Next(1, 3);
+                this.pteam = rr;
+                Log.ConsoleInfo("Random was (SET no var)" + rr);
+                Main.player[Index].team = this.pteam;
+            }
+            else
+            {
+                Main.player[Index].team = this.pteam;
+            }
+            SendData(PacketTypes.PlayerTeam, "", Index);
+        }
 
 		private DateTime LastDisableNotification = DateTime.UtcNow;
 		public int ActiveChest = -1;
@@ -1085,6 +1111,7 @@ namespace TShockAPI
 		public int spawnY= -1;
         public int exp = 1;
         public int lvl = 1;
+        public int pteam = 0;
 
 		public PlayerData(TSPlayer player)
 		{

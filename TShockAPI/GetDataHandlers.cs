@@ -1453,6 +1453,7 @@ namespace TShockAPI
 					}
 					args.Player.SendMessage("Authenticated as " + args.Player.Name + " successfully.", Color.LimeGreen);
 					Log.ConsoleInfo(args.Player.Name + " authenticated successfully as user " + args.Player.Name + ".");
+                    args.Player.SetTeam();
 					Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
 					return true;
 				}
@@ -2139,7 +2140,7 @@ namespace TShockAPI
                 return true;
             }
 
-            args.TPlayer.team = team;
+            args.TPlayer.team = args.Player.pteam;
 
             NetMessage.SendData((int)PacketTypes.PlayerTeam, -1, -1, "", args.Player.Index);
 
