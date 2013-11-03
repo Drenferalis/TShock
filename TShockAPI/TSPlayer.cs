@@ -611,14 +611,15 @@ namespace TShockAPI
 		public void Spawn()
 		{			
 //			TPlayer.FindSpawn();
-			if (this.sX > 0 && this.sY > 0)
-			{
-				Spawn(this.sX, this.sY);
-			}
-			else
-			{
-				Spawn(TPlayer.SpawnX, TPlayer.SpawnY);
-			}
+            if (this.pteam == 1)
+            {
+                //Spawn(101375, 6390);
+                Spawn(6336, 400);
+            }
+            if (this.pteam == 2)
+            {
+                Spawn(59, 400);
+            }
 		}
 
 		public void Spawn(int tilex, int tiley)
@@ -634,6 +635,14 @@ namespace TShockAPI
 				msg.PackFull(ms);
 				SendRawData(ms.ToArray());
 			}
+            if (this.pteam == 1)
+            {
+                this.Teleport(101375, 6390);
+            }
+            if (this.pteam == 2)
+            {
+                this.Teleport(941, 6390);
+            }
 		}
 
 		public void RemoveProjectile(int index, int owner)
@@ -1255,7 +1264,10 @@ namespace TShockAPI
 			player.TPlayer.SpawnX = this.spawnX;
 			player.TPlayer.SpawnY = this.spawnY;
 			player.sX = this.spawnX;
-			player.sY = this.spawnY;            
+			player.sY = this.spawnY;
+            player.pteam = this.pteam;
+            player.Level = this.lvl;
+            player.Experience = this.exp;
 			
 			for (int i = 0; i < NetItem.maxNetInventory; i++)
 			{

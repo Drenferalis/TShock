@@ -822,11 +822,11 @@ namespace TShockAPI
         {
             if (plyr.pteam == 1)
             {
-                plyr.Teleport(75000, 5100);
+                plyr.Teleport(101375, 6390);
             }
             if (plyr.pteam == 2)
             {
-                plyr.Teleport(25000, 5100);
+                plyr.Teleport(941, 6390);
             }
         }
         private static void testrand(CommandArgs args)
