@@ -2499,6 +2499,23 @@ namespace TShockAPI
 			var direction = args.Data.ReadInt8();
 			var dmg = args.Data.ReadInt16();
 			var pvp = args.Data.ReadInt8() == 0;
+            //Add team and pvp check, increment enemy kills.
+            if (args.Player.Team == 1 && TShock.Config.PvPMode == "always")
+            {
+                TShockAPI.TShock.team2lives--;
+            }
+            if(args.Player.Team == 2 && TShock.Config.PvPMode == "always")
+            {
+                TShockAPI.TShock.team1lives--;
+            }
+            if (!(TShock.team1lives > 0))
+            {
+                TShock.Winner(2);
+            }
+            if (!(TShock.team2lives > 0))
+            {
+                TShock.Winner(1);
+            }
 
 			if (dmg > 20000) //Abnormal values have the potential to cause infinite loops in the server.
 			{

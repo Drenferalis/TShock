@@ -839,13 +839,13 @@ namespace TShockAPI
 		private DateTime LastDisableNotification = DateTime.UtcNow;
 		public int ActiveChest = -1;
 
-		public virtual void Disable(string reason = "", bool displayConsole = true)
+		public virtual void Disable(string reason = "", bool displayConsole = true, int time = 330)
 		{
 			LastThreat = DateTime.UtcNow;
-			SetBuff(33, 330, true); //Weak
-			SetBuff(32, 330, true); //Slow
-			SetBuff(23, 330, true); //Cursed
-			SetBuff(47, 330, true); //Frozen
+			SetBuff(33, time, true); //Weak
+			SetBuff(32, time, true); //Slow
+			SetBuff(23, time, true); //Cursed
+			SetBuff(47, time, true); //Frozen
 
 			if (ActiveChest != -1)
 			{
@@ -1268,7 +1268,15 @@ namespace TShockAPI
             player.pteam = this.pteam;
             player.Level = this.lvl;
             player.Experience = this.exp;
-			
+            if (this.pteam == 1)
+            {
+                //Spawn(101375, 6390);
+                player.Teleport(6336, 400);
+            }
+            if (this.pteam == 2)
+            {
+                player.Teleport(59, 400);
+            }
 			for (int i = 0; i < NetItem.maxNetInventory; i++)
 			{
 				if (i < NetItem.maxNetInventory - (NetItem.armorSlots + NetItem.dyeSlots))

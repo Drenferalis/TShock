@@ -792,10 +792,15 @@ namespace TShockAPI
 							Vector2 pos = TShock.RememberedPos.GetLeavePos(args.Player.Name, args.Player.IP);
 							args.Player.Teleport((int) pos.X*16, (int) pos.Y*16);
 						}
-						args.Player.LoginHarassed = false;
+                        args.Player.LoginHarassed = false;
 					}
 					TShock.Users.SetUserUUID(user, args.Player.UUID);
                     spawn(args.Player);
+                    args.Player.Disable("Please read the rules by typing /rules", true, 5000);
+                    args.Player.SendErrorMessage("Please read the rules by typing /rules");
+                    args.Player.SendErrorMessage("Please read the rules by typing /rules");
+                    args.Player.SendErrorMessage("Please read the rules by typing /rules");
+                    args.Player.SendErrorMessage("Please read the rules by typing /rules");
 					Hooks.PlayerHooks.OnPlayerPostLogin(args.Player);
 				}
 				else
@@ -818,6 +823,10 @@ namespace TShockAPI
 				Log.Error(ex.ToString());
 			}
 		}
+        public static void srules(CommandArgs args)
+        {
+
+        }
         public static void spawn(TSPlayer plyr)
         {
             if (plyr.pteam == 1)
@@ -895,7 +904,7 @@ namespace TShockAPI
                 if (TShock.Users.GetUserByName(user.Name) == null && user.Name != TSServerPlayer.AccountName) // Cheap way of checking for existance of a user
 				{
 					args.Player.SendSuccessMessage("Account \"{0}\" has been registered.", user.Name);
-					//args.Player.SendSuccessMessage("Your password is {0}.", user.Password);
+					args.Player.SendSuccessMessage("Please log in to your account to play!");
 					TShock.Users.AddUser(user);
 					TShock.CharacterDB.SeedInitialData(TShock.Users.GetUser(user));
 					Log.ConsoleInfo("{0} registered an account: \"{1}\".", args.Player.Name, user.Name);
@@ -3799,6 +3808,10 @@ namespace TShockAPI
 		private static void Rules(CommandArgs args)
 		{
 			TShock.Utils.ShowFileToUser(args.Player, "rules.txt");
+            args.Player.SetBuff(33, 1, true);
+            args.Player.SetBuff(32, 1, true);
+            args.Player.SetBuff(23, 1, true);
+            args.Player.SetBuff(47, 1, true);
 		}
 
 		private static void Whisper(CommandArgs args)
@@ -4021,6 +4034,7 @@ namespace TShockAPI
                 TShock.Regions.SetRegionState("1", false);
                 TShock.Regions.SetRegionState("2", false);
                 TSPlayer.All.SendInfoMessage("PVP TIME!");
+                TShock.Countdown.Start();
             }
             else
             {
@@ -4033,7 +4047,7 @@ namespace TShockAPI
         }
         private static void HelpOP(CommandArgs args)
         {
-
+            
             if (args.Parameters.Count < 1)
             {
                 args.Player.SendErrorMessage("Invalid syntax! Proper usage is: /helpop <message>");
@@ -4167,16 +4181,16 @@ namespace TShockAPI
 			}
 		}
 
-		private static void Butcher(CommandArgs args)
+		public static void Butcher(CommandArgs args)
 		{
 			if (args.Parameters.Count > 1)
 			{
 				args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /butcher [mob type]");
 				return;
 			}
-
+            
 			int npcId = 0;
-
+            
 			if (args.Parameters.Count == 1)
 			{
 				List<NPC> npcs = TShock.Utils.GetNPCByIdOrName(args.Parameters[0]);

@@ -45,8 +45,9 @@ namespace TShockAPI
 	{
 		public static readonly Version VersionNum = Assembly.GetExecutingAssembly().GetName().Version;
 		public static readonly string VersionCodename = "And the great beast rose from its slumber, ready to take on the world again.";
-
 		public static string SavePath = "tshock";
+        public static int team1lives = 200;
+        public static int team2lives = 200;
 		private const string LogFormatDefault = "yyyy-MM-dd_HH-mm-ss";
 		private static string LogFormat = LogFormatDefault;
 		private const string LogPathDefault = "tshock";
@@ -55,6 +56,8 @@ namespace TShockAPI
         private static string CLogPath = LogPathDefault;
 		private static bool LogClear = false;
         private Timer timer;
+        public static Timer endgame;
+        public static Timer Countdown;
 		public static TSPlayer[] Players = new TSPlayer[Main.maxPlayers];
 		public static BanManager Bans;
 		public static WarpManager Warps;
@@ -130,7 +133,6 @@ namespace TShockAPI
 
 				ConfigFile.ConfigRead += OnConfigRead;
 				FileTools.SetupConfig();
-
 				Main.ServerSideCharacter = Config.ServerSideCharacter; //FYI, This cannot be disabled once flipped.
 
 				DateTime now = DateTime.Now;
@@ -616,14 +618,46 @@ namespace TShockAPI
 			}
 
             Regions.ReloadAllRegions();
-            timer = new Timer(60 * 24 * 60 * 1000);
+            timer = new Timer(60 * 60 * 1000);
             timer.Elapsed += OnElapsed;
             timer.Start();
+            Countdown = new Timer(60 * 1000);
+            Countdown.Elapsed += OnCountdown;
+            endgame = new Timer(120 * 1000);
+            endgame.Elapsed += OnEndgame;
 			Lighting.lightMode = 2;
 			FixChestStacks();
 
             
 		}
+        public static void Winner(int team)
+        {
+            foreach (TSPlayer plyr in TShock.Players)
+            {
+                plyr.Disable("Round over", false, 660);
+            }
+            TShock.Config.DefaultSpawnRate = 6000000;
+            NPC.defaultSpawnRate = 6000000;
+            for (int i = 0; i < Main.npc.Length; i++)
+            {
+                if (Main.npc[i].active && !Main.npc[i].townNPC)
+                {
+                    TSPlayer.Server.StrikeNPC(i, 99999, 0, 0);
+                }
+            }
+            TSPlayer.All.SendMessage("Team # " + team + " has won this round!", Color.Azure);
+            TSPlayer.All.SendMessage("Team # " + team + " has won this round!", Color.Azure);
+            TSPlayer.All.SendMessage("Team # " + team + " has won this round!", Color.Azure);
+            endgame.Start();
+        }
+        private void OnCountdown(object sender, ElapsedEventArgs e)
+        {
+            TSPlayer.All.SendInfoMessage(String.Format("Team 1 Lives: {0}  Team 2 Lives: {1}", team1lives, team2lives));
+        }
+        private void OnEndgame(object sender, ElapsedEventArgs e)
+        {
+            TShock.Utils.StopServer(false, "Resetting the world for next round!");
+        }
         private void OnElapsed(object sender, ElapsedEventArgs e)
         {
             if(TShock.Config.PvPMode == "normal")
@@ -632,11 +666,13 @@ namespace TShockAPI
                 TShock.Regions.SetRegionState("1", false);
                 TShock.Regions.SetRegionState("2", false);
                 TSPlayer.All.SendInfoMessage("PVP TIME!");
+                Countdown.Start();
             }else{
                 TShock.Config.PvPMode = "normal";
                 TShock.Regions.SetRegionState("1", true);
                 TShock.Regions.SetRegionState("2", true);
-                TSPlayer.All.SendInfoMessage("PVP TIME IS OVER!");
+                //Set winners in database.
+                TShock.Utils.StopServer(false, "Resetting the world for next round!");
             }
         }
 		private void FixChestStacks()
@@ -1208,7 +1244,7 @@ namespace TShockAPI
 			    player.RPPending=3;
 			    player.SendMessage("You will be teleported to your last known location...", Color.Red);
 			}
-			
+            player.Spawn();
 			args.Handled = true;
 		}
 
